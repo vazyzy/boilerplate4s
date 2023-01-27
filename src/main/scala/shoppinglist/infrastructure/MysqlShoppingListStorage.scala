@@ -4,9 +4,9 @@ import shoppinglist.api._
 import shoppinglist.spi.ShoppingListStorage
 
 //Generated boilerplate
-class MysqlShoppingListStorage[F[_]] extends ShoppingListStorage[F] {
+class MysqlShoppingListStorage[F[_]](dao: MysqlShoppingListDao[F]) extends ShoppingListStorage[F] {
 
-  override def createList(ownerId: OwnerId): F[ListId] = ???
+  override def createList(ownerId: OwnerId): F[ListId] = dao.createList(ownerId)
 
   override def addItem(ownerId: OwnerId, listId: ListId, item: AddItem): F[Unit] = ???
 
