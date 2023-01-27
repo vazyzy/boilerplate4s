@@ -4,7 +4,7 @@ import shoppinglist.api._
 
 
 //Generated boilerplate
-trait ShoppingListStorage[F[_]] {
+trait ShoppingListRepo[F[_]] {
 
   def createList(ownerId: OwnerId): F[ListId]
 

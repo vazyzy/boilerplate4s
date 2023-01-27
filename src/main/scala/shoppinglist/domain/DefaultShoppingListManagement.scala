@@ -1,10 +1,10 @@
 package shoppinglist.domain
 
 import shoppinglist.api._
-import shoppinglist.spi.ShoppingListStorage
+import shoppinglist.spi.ShoppingListRepo
 
 // Generated boilerplate
-class DefaultShoppingListManagement[F[_]](storage: ShoppingListStorage[F]) extends ShoppingListManagement[F] {
+class DefaultShoppingListManagement[F[_]](storage: ShoppingListRepo[F]) extends ShoppingListManagement[F] {
 
   def createList(ownerId: OwnerId): F[ListId] =
     storage.createList(ownerId)

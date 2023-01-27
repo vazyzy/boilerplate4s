@@ -1,10 +1,10 @@
 package shoppinglist.infrastructure
 
 import shoppinglist.api._
-import shoppinglist.spi.ShoppingListStorage
+import shoppinglist.spi.ShoppingListRepo
 
 //Generated boilerplate
-class DefaultShoppingListStorage[F[_]](dao: MysqlShoppingListDao[F]) extends ShoppingListStorage[F] {
+class DefaultShoppingListRepo[F[_]](dao: MysqlShoppingListDao[F]) extends ShoppingListRepo[F] {
 
   override def createList(ownerId: OwnerId): F[ListId] = dao.createList(ownerId)
 
