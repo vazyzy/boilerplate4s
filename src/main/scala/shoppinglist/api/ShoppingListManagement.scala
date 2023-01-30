@@ -26,6 +26,8 @@ trait ShoppingListManagement {
   def createList(ownerId: OwnerId, name: String): UIO[ListId]
 
   def addItem(
+      // This should be renamed to userId and used for authorization purposes,
+      // otherwise there's no need for passing this parameter.
       ownerId: OwnerId,
       listId: ListId,
       name: String,
@@ -56,4 +58,9 @@ trait ShoppingListManagement {
       ownerId: OwnerId,
       listId: ListId
   ): IO[ShoppingListManagementError, ShoppingListView]
+
+  def deleteList(
+      ownerId: OwnerId,
+      listId: ListId
+  ): IO[ShoppingListManagementError, Unit]
 }

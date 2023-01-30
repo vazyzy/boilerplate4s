@@ -20,7 +20,7 @@ final class DefaultShoppingListRepo(
       .flatMap { in =>
         f(in).flatMap { out =>
           out
-            .fold(delete(id))(upsert)
+            .fold(delete(id))(upsert(id))
             .when(out != in)
             .unit
         }
@@ -42,7 +42,6 @@ final class DefaultShoppingListRepo(
       itemRows: List[ShoppingListItemRow]
   ): ShoppingList =
     ShoppingList(
-      id = listRow.id,
       ownerId = listRow.ownerId,
       name = listRow.name,
       items = itemRows.map { case ShoppingListItemRow(itemId, name, quantity) =>
@@ -54,16 +53,17 @@ final class DefaultShoppingListRepo(
       }
     )
 
-  private def upsert(list: ShoppingList): UIO[Unit] = {
-    val (listRow, listItemRows) = toRows(list)
-    lists.upsert(listRow) *> listItems.upsert(list.id, listItemRows)
+  private def upsert(listId: ListId)(list: ShoppingList): UIO[Unit] = {
+    val (listRow, listItemRows) = toRows(listId, list)
+    lists.upsert(listRow) *> listItems.upsert(listId, listItemRows)
   }
 
   private def toRows(
+      listId: ListId,
       list: ShoppingList
   ): (ShoppingListRow, List[ShoppingListItemRow]) = {
     val listRow = ShoppingListRow(
-      list.id,
+      listId,
       list.ownerId,
       list.name
     )

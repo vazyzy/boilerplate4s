@@ -7,11 +7,11 @@ object ShoppingListSpec extends ZIOSpecDefault {
   def spec =
     suite("HelloWorldSpec")(
       test("ShoppingList.empty") {
-        val emptyList = ShoppingList.empty("", "", "")
+        val emptyList = ShoppingList.empty("", "")
         assertTrue(emptyList.items.isEmpty)
       },
       test("ShoppingList#addItem") {
-        val emptyList = ShoppingList.empty("", "", "")
+        val emptyList = ShoppingList.empty("", "")
         val addResult = emptyList.addItem("1", "name", 1)
         val addWithSameIdResult = addResult.flatMap(_.addItem("1", "other name", 1))
         val addWithSameNameResult = addResult.flatMap(_.addItem("2", "name", 1))
@@ -20,7 +20,7 @@ object ShoppingListSpec extends ZIOSpecDefault {
         assert(addWithSameNameResult)(isLeft(equalTo(DuplicateItemName)))
       },
       test("ShoppingList#removeItem") {
-        val emptyList = ShoppingList.empty("", "", "")
+        val emptyList = ShoppingList.empty("", "")
         val Right(list) = emptyList.addItem("1", "name", 1)
         val removeExistingItemResult = list.removeItem("1")
         val removeMissingIdResult = list.removeItem("2")
@@ -29,7 +29,7 @@ object ShoppingListSpec extends ZIOSpecDefault {
       },
       test("ShoppingList#renameItem") {
         val Right(list) = ShoppingList
-          .empty("", "", "")
+          .empty("", "")
           .addItem("1", "name", 1)
         val renameExistingItemResult = list.renameItem("1", "newName")
         val renameMissingItem = list.renameItem("2", "newName")
@@ -48,7 +48,7 @@ object ShoppingListSpec extends ZIOSpecDefault {
       },
       test("ShoppingList#changeItemQuantity") {
         val Right(list) = ShoppingList
-          .empty("", "", "")
+          .empty("", "")
           .addItem("1", "name", 1)
         val changeQuantityOfExistingItemResult = list.changeItemQuantity("1", 2)
         val changeQuantityOfMissingItemResult = list.changeItemQuantity("2", 3)

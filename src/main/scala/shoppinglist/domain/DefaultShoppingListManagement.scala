@@ -10,7 +10,7 @@ final class DefaultShoppingListManagement(repo: ShoppingListRepo) extends Shoppi
   override def createList(ownerId: OwnerId, name: String): UIO[ListId] =
     ListId.generate.tap { listId =>
       repo.access(listId) {
-        case None    => ZIO.some(ShoppingList.empty(listId, ownerId, name))
+        case None    => ZIO.some(ShoppingList.empty(ownerId, name))
         case Some(_) => ZIO.dieMessage(s"Duplicate list identifier ${listId}")
       }
     }
@@ -58,6 +58,12 @@ final class DefaultShoppingListManagement(repo: ShoppingListRepo) extends Shoppi
     repo.access(listId) {
       case None       => ZIO.fail(ShoppingListManagementError.ListNotExist)
       case Some(list) => ZIO.from(list.changeItemQuantity(itemId, newQuantity)).asSome
+    }
+
+  override def deleteList(ownerId: OwnerId, listId: ListId): IO[ShoppingListManagementError, Unit] =
+    repo.access(listId) {
+      case None    => ZIO.fail(ShoppingListManagementError.ListNotExist)
+      case Some(_) => ZIO.none
     }
 
   override def getList(

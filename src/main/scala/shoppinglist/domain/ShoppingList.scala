@@ -5,7 +5,6 @@ import ShoppingListManagementError._
 import zio.{UIO, ZIO}
 
 final case class ShoppingList(
-    id: ListId,
     ownerId: OwnerId,
     name: String,
     items: List[ListItem]
@@ -53,8 +52,8 @@ final case class ShoppingList(
   }
 }
 object ShoppingList {
-  def empty(id: ListId, ownerId: OwnerId, name: String): ShoppingList =
-    ShoppingList(id, ownerId, name, List.empty)
+  def empty(ownerId: OwnerId, name: String): ShoppingList =
+    ShoppingList(ownerId, name, List.empty)
 }
 case class ListItem(id: ListItemId, name: String, quantity: Int)
 
