@@ -29,7 +29,7 @@ final case class ShoppingList(
       Right(copy(items = otherItems))
   }
 
-  def renameItem(itemId: ListItemId, newName: String): Either[ShoppingListManagementError, ShoppingList] = {
+  def renameItem(itemId: ListItemId, newName: String): Either[ShoppingListManagementError, ShoppingList] =
     if (items.exists(i => i.id != itemId && i.name == newName))
       Left(DuplicateItemName)
     else {
@@ -43,7 +43,6 @@ final case class ShoppingList(
             Right(copy(items = item.copy(name = newName) :: otherItems))
       }
     }
-  }
 
   def changeItemQuantity(itemId: ListItemId, newQuantity: Int): Either[ShoppingListManagementError, ShoppingList] = {
     val (item, otherItems) = items.partition(_.id == itemId)
