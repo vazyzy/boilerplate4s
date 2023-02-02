@@ -1,19 +1,22 @@
 package shoppinglist.domain
 
 import shoppinglist.api._
-import shoppinglist.spi.ShoppingListRepo
+import shoppinglist.spi.{ShoppingListItemRepo, ShoppingListRepo}
 import zio.{IO, UIO, ZIO}
 
 // Generated boilerplate
-final class DefaultShoppingListManagement(repo: ShoppingListRepo) extends ShoppingListManagement {
+final class DefaultShoppingListManagement(lists: ShoppingListRepo, items: ShoppingListItemRepo)
+    extends ShoppingListManagement {
 
   override def createList(ownerId: OwnerId, name: String): UIO[ListId] =
-    ListId.generate.tap { listId =>
-      repo.access(listId) {
-        case None    => ZIO.some(ShoppingList.empty(ownerId, name))
-        case Some(_) => ZIO.dieMessage(s"Duplicate list identifier ${listId}")
+    ListId.generate
+      .tap { listId =>
+        lists.modify(listId) {
+          case None       => ZIO.some(ShoppingList(listId, ownerId, name))
+          case Some(list) => ZIO.fail(list)
+        }
       }
-    }
+      .catchAll(_ => createList(ownerId, name))
 
   override def addItem(
       ownerId: OwnerId,
@@ -21,11 +24,15 @@ final class DefaultShoppingListManagement(repo: ShoppingListRepo) extends Shoppi
       name: String,
       quantity: Int
   ): IO[ShoppingListManagementError, ListItemId] =
-    ListItemId.generate.tap { itemId =>
-      repo.access(listId) {
-        case None       => ZIO.fail(ShoppingListManagementError.ListNotExist)
-        case Some(list) => ZIO.from(list.addItem(itemId, name, quantity)).asSome
-      }
+    lists.access(listId) {
+      case None => ZIO.fail(ShoppingListManagementError.ListNotExist)
+      case Some(list) =>
+        ListItemId.generate.tap { itemId =>
+          items.modify(itemId) {
+            case Some(_) => ZIO.dieMessage("Duplicate Generated Item Id")
+            case None    => ZIO.some(list.addItem(itemId, name, quantity))
+          }
+        }
     }
 
   override def removeItem(
@@ -33,9 +40,9 @@ final class DefaultShoppingListManagement(repo: ShoppingListRepo) extends Shoppi
       listId: ListId,
       itemId: ListItemId
   ): IO[ShoppingListManagementError, Unit] =
-    repo.access(listId) {
-      case None       => ZIO.fail(ShoppingListManagementError.ListNotExist)
-      case Some(list) => ZIO.from(list.removeItem(itemId)).asSome
+    items.modify(itemId) {
+      case None | Some(item) if item.listId != listId => ZIO.fail(ShoppingListManagementError.ItemNotExist)
+      case Some(_)                                    => ZIO.none
     }
 
   override def renameItem(
@@ -44,9 +51,9 @@ final class DefaultShoppingListManagement(repo: ShoppingListRepo) extends Shoppi
       itemId: ListItemId,
       newName: String
   ): IO[ShoppingListManagementError, Unit] =
-    repo.access(listId) {
-      case None       => ZIO.fail(ShoppingListManagementError.ListNotExist)
-      case Some(list) => ZIO.from(list.renameItem(itemId, newName)).asSome
+    items.modify(itemId) {
+      case None | Some(item) if item.listId != listId => ZIO.fail(ShoppingListManagementError.ItemNotExist)
+      case Some(item)                                 => ZIO.some(item.rename(newName))
     }
 
   override def changeItemQuantity(
@@ -55,13 +62,13 @@ final class DefaultShoppingListManagement(repo: ShoppingListRepo) extends Shoppi
       itemId: ListItemId,
       newQuantity: Int
   ): IO[ShoppingListManagementError, Unit] =
-    repo.access(listId) {
-      case None       => ZIO.fail(ShoppingListManagementError.ListNotExist)
-      case Some(list) => ZIO.from(list.changeItemQuantity(itemId, newQuantity)).asSome
+    items.modify(itemId) {
+      case None | Some(item) if item.listId != listId => ZIO.fail(ShoppingListManagementError.ItemNotExist)
+      case Some(item)                                 => ZIO.some(item.changeQuantity(newQuantity))
     }
 
   override def deleteList(ownerId: OwnerId, listId: ListId): IO[ShoppingListManagementError, Unit] =
-    repo.access(listId) {
+    lists.modify(listId) {
       case None    => ZIO.fail(ShoppingListManagementError.ListNotExist)
       case Some(_) => ZIO.none
     }

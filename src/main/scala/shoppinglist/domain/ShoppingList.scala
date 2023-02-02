@@ -1,61 +1,30 @@
 package shoppinglist.domain
 
-import shoppinglist.api.{ListId, ListItemId, OwnerId, ShoppingListManagementError}
-import ShoppingListManagementError._
+import shoppinglist.api.{ListId, ListItemId, OwnerId}
 import zio.{UIO, ZIO}
 
 final case class ShoppingList(
+    id: ListId,
     ownerId: OwnerId,
-    name: String,
-    items: List[ListItem]
+    name: String
 ) {
-
-  def addItem(itemId: ListItemId, name: String, quantity: Int): Either[ShoppingListManagementError, ShoppingList] =
-    if (items.exists(_.id == itemId))
-      Left(DuplicateItemId)
-    else if (items.exists(_.name == name))
-      Left(DuplicateItemName)
-    else
-      Right(
-        copy(items = ListItem(itemId, name, quantity) :: items)
-      )
-
-  def removeItem(itemId: ListItemId): Either[ShoppingListManagementError, ShoppingList] = {
-    val (item, otherItems) = items.partition(_.id == itemId)
-    if (item.isEmpty)
-      Left(ItemNotExist)
-    else
-      Right(copy(items = otherItems))
-  }
-
-  def renameItem(itemId: ListItemId, newName: String): Either[ShoppingListManagementError, ShoppingList] =
-    if (items.exists(i => i.id != itemId && i.name == newName))
-      Left(DuplicateItemName)
-    else {
-      val (item, otherItems) = items.partition(_.id == itemId)
-      item.headOption match {
-        case None => Left(ItemNotExist)
-        case Some(item) =>
-          if (item.name == newName)
-            Right(this)
-          else
-            Right(copy(items = item.copy(name = newName) :: otherItems))
-      }
-    }
-
-  def changeItemQuantity(itemId: ListItemId, newQuantity: Int): Either[ShoppingListManagementError, ShoppingList] = {
-    val (item, otherItems) = items.partition(_.id == itemId)
-    item.headOption match {
-      case None       => Left(ItemNotExist)
-      case Some(item) => Right(copy(items = item.copy(quantity = newQuantity) :: otherItems))
-    }
-  }
+  def addItem(itemId: ListItemId, name: String, quantity: Int): ListItem =
+    ListItem(itemId, id, name, quantity)
 }
-object ShoppingList {
-  def empty(ownerId: OwnerId, name: String): ShoppingList =
-    ShoppingList(ownerId, name, List.empty)
+case class ListItem(id: ListItemId, listId: ListId, name: String, quantity: Int) {
+  def rename(newName: String): ListItem =
+    if (name == newName)
+      this
+    else
+      copy(name = newName)
+
+  def changeQuantity(newQuantity: Int): ListItem =
+    if (newQuantity == quantity)
+      this
+    else
+      copy(quantity = newQuantity)
+
 }
-case class ListItem(id: ListItemId, name: String, quantity: Int)
 
 object ListId {
   def generate: UIO[ListId] = ZIO.randomWith(_.nextUUID).map(_.toString)

@@ -13,7 +13,10 @@ final class DefaultShoppingListRepo(
     listItems: MysqlShoppingListItemDao
 ) extends ShoppingListRepo {
 
-  override def access[R, E](id: ListId)(
+  override def access[R, E, A](id: ListId)(f: Option[ShoppingList] => ZIO[R, E, A]): ZIO[R, E, A] =
+    load(id).flatMap(f)
+
+  override def modify[R, E](id: ListId)(
       f: Option[ShoppingList] => ZIO[R, E, Option[ShoppingList]]
   ): ZIO[R, E, Unit] =
     load(id)
