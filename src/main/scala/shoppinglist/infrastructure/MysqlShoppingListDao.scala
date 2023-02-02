@@ -1,47 +1,34 @@
 package shoppinglist.infrastructure
 
 import shoppinglist.api._
-import shoppinglist.infrastructure.MysqlShoppingListDao._
-
+import shoppinglist.infrastructure.MysqlShoppingListDao.ShoppingListRow
+import shoppinglist.infrastructure.MysqlShoppingListItemDao.ShoppingListItemRow
+import zio.UIO
 
 //Generated boilerplate
-class MysqlShoppingListDao[F[_]] {
+final class MysqlShoppingListDao {
+  def find(listId: ListId): UIO[Option[ShoppingListRow]] = ???
+  def delete(listId: ListId): UIO[Unit] = ???
 
-   def createList(ownerId: OwnerId): F[ListId] = ???
-
-   def addItem(ownerId: OwnerId,
-               listId: ListId,
-               item: AddItemDocument): F[Unit] = ???
-
-   def removeItem(ownerId: OwnerId,
-                  listId: ListId,
-                  item: ItemId): F[Either[Unit, MysqlShoppingListDaoError]] = ???
-
-   def updateItem(ownerId: OwnerId,
-                  listId: ListId,
-                  item: ItemId,
-                  newItem: UpdateItemDocument): F[Either[ListItemDocument, MysqlShoppingListDaoError]] = ???
-
-   def getItems(ownerId: OwnerId,
-                listId: ListId): F[Either[List[ListItem], MysqlShoppingListDaoError]] = ???
+  def upsert(row: ShoppingListRow): UIO[Unit] = ???
 }
-
-
 //Generated boilerplate
 object MysqlShoppingListDao {
 
-   case class AddItemDocument(name: String, price: Double, quantity: Int)
+  case class ShoppingListRow(id: ListId, ownerId: OwnerId, name: String)
+}
 
-   case class UpdateItemDocument(name: String, price: Double, quantity: Int)
+class MysqlShoppingListItemDao {
+  def findWithListId(listId: ListId): UIO[List[ShoppingListItemRow]] = ???
+  def deleteWithListId(listId: ListId): UIO[Unit] = ???
+  def upsert(listId: ListId, rows: List[ShoppingListItemRow]): UIO[Unit] = ???
+}
 
-   case class ListItemDocument(id: ItemId, name: String, price: Double, quantity: Int)
+object MysqlShoppingListItemDao {
 
-   sealed trait MysqlShoppingListDaoError
-
-   object MysqlShoppingListDaoError {
-
-      object ItemNotFound extends MysqlShoppingListDaoError
-
-      object ListNotFound extends MysqlShoppingListDaoError
-   }
+  case class ShoppingListItemRow(
+      id: ListItemId,
+      name: String,
+      quantity: Int
+  )
 }
